@@ -450,7 +450,6 @@ func (m *Mongo) EnsureIndexes() error {
 	i := mgo.Index{
 		Key:        []string{"username"},
 		Unique:     true,
-		DropDups:   true,
 		Background: true,
 		Sparse:     false,
 	}
