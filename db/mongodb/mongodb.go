@@ -18,6 +18,7 @@ var (
 	name     string
 	password string
 	host     string
+	authdb   string
 	db       = "users"
 	//ErrInvalidHexID represents a entity id that is not a valid bson ObjectID
 	ErrInvalidHexID = errors.New("Invalid Id Hex")
@@ -27,6 +28,7 @@ func init() {
 	flag.StringVar(&name, "mongo-user", os.Getenv("MONGO_USER"), "Mongo user")
 	flag.StringVar(&password, "mongo-password", os.Getenv("MONGO_PASS"), "Mongo password")
 	flag.StringVar(&host, "mongo-host", os.Getenv("MONGO_HOST"), "Mongo host")
+	flag.StringVar(&authdb, "mongo-authdb", os.Getenv("MONGO_AUTHDB"), "Mongo Authentication Database")
 }
 
 // Mongo meets the Database interface requirements
@@ -39,6 +41,7 @@ type Mongo struct {
 func (m *Mongo) Init() error {
 	u := getURL()
 	var err error
+	// fmt.Printf(u.String())
 	m.Session, err = mgo.DialWithTimeout(u.String(), time.Duration(5)*time.Second)
 	if err != nil {
 		return err
@@ -431,15 +434,20 @@ func (m *Mongo) Delete(entity, id string) error {
 }
 
 func getURL() url.URL {
+
 	ur := url.URL{
 		Scheme: "mongodb",
 		Host:   host,
 		Path:   db,
 	}
+	q := ur.Query()
+	q.Set("authSource", authdb)
+	ur.RawQuery = q.Encode()
 	if name != "" {
 		u := url.UserPassword(name, password)
 		ur.User = u
 	}
+	fmt.Println(ur.String())
 	return ur
 }
 
